@@ -5,9 +5,14 @@
     header('Content-Type: application/json');
     header('Accept: application/json');
 
+    include_once '../../models/User.php';
+    include_once '../../config/SingletonDB.php';
+
     $response = array();
 
     if($_SERVER['REQUEST_METHOD'] == 'POST'){
+        $database = SingletonDB::getInstance();
+        $db = $database->getConnection();
 
         try{
             $targetDir = "/Applications/XAMPP/xamppfiles/temp/";
@@ -36,13 +41,13 @@
                         $response['isPhoto'] = '1';
                     }else{
                         $error['errorCode'] = 'PHOTO_ERROR';
-                        echo 'error';
                     }
                     if(move_uploaded_file($_FILES['signature']['tmp_name'], $targetSignature)){
                         $response['isSignature'] = '1';
+                        $user = new User($db);
+                        $user->updateVolunteerStatus($userId, 'Y');
                     }else{
                         $error['errorCode'] = 'SIGNATURE_ERROR';
-                        echo 'error';
                     }
                 }
         }catch(Exception $e){

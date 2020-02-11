@@ -8,7 +8,6 @@
     include_once '../../config/SingletonDB.php';
     include_once '../../config/Validator.php';
     include_once '../../models/Volunteer/Education.php';
-    include_once '../../models/User.php';
 
     $validator = new Validator();
     $database = SingletonDB::getInstance();
@@ -103,9 +102,6 @@
                             // Address is added/updated successfully
                             $response = $res;
                             $response['statusCode'] = '0';
-                            // Update the volunteer status
-                            $user = new User($db);
-                            $user->updateVolunteerStatus($userId, 'Y');
                         }   
                     }
             }
