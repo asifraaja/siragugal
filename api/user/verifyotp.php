@@ -66,10 +66,10 @@
                 $response['errorMessage'] = $error;
                 $response['isVerified'] = "N";
             }else{
-                // $user->verifyOTP($phoneNumber, $user->encrypt_otp($otp_sent), MyTime::currentTime());
+                $user->verifyOTP($phoneNumber, $user->encrypt_otp($otp_sent), MyTime::currentTime());
                 $curr_time = MyTime::currentTime();
-                // $isExpired = MyTime::getDifference($curr_time, $otp_sent_time);
-                // $status = $user->validate_otp($otp, $otp_header, $isExpired);
+                $isExpired = MyTime::getDifference($curr_time, $otp_sent_time);
+                $status = $user->validate_otp($otp, $otp_header, $isExpired);
                 $status = 1;
                 if($status == -5){
                     $response['statusCode'] = "-1";
@@ -83,8 +83,6 @@
                         $usr['otp_sent_time'] = $curr_time;
                         if($newUser == "Y"){
                             $usr = $user->updateOTPStatusAndGetUserDetails($phoneNumber);
-                            // $user->updateOTPStatus($phoneNumber);
-                            // $usr = $user->getUserDetails($phoneNumber);
                         }
                         $response['user'] = $usr;
                         $response['statusCode'] = "0";
