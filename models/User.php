@@ -559,6 +559,26 @@
          * Returns (userId, userEmail, phoneNumber)
          */
         public function getAllUsers(){
+            $query = "SELECT ud.usr_id AS usr_id, ph_no, mail_id FROM user_details ud, login_details ld WHERE ud.usr_id=ld.usr_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            $users = array();
+            while($row = $result->fetch_assoc()){
+                $user = array();
+                $user['userId'] = $row['usr_id'];
+                $user['phoneNumber'] = $row['ph_no'];
+                $user['emailId'] = $row['mail_id'];
+                array_push($users, $user);
+            }
+            return $users;
+        }
+
+        /**
+         * Returns only volunteers(userId, userEmail, phoneNumber)
+         */
+        public function getAllVolunteers(){
             $query = "SELECT ud.usr_id AS usr_id, ph_no, mail_id FROM user_details ud, login_details ld WHERE ud.usr_id=ld.usr_id and ld.vol_fl='Y'";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
