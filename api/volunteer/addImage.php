@@ -21,21 +21,32 @@
             $userId = $_POST['userId'];
             $photoFile = $targetDir.basename($_FILES['photo']['name']);
             $signatureFile = $targetDir.basename($_FILES['signature']['name']);
+            $addressProofFile = $targetDir.basename($_FILES['addressProof']['name']);
 
             $photoExtension = strtolower(pathinfo($photoFile,PATHINFO_EXTENSION));
             $signatureExtension = strtolower(pathinfo($signatureFile,PATHINFO_EXTENSION));
+            $addressProofExtension = strtolower(pathinfo($addressProofFile,PATHINFO_EXTENSION));
 
-            // $isValidPhoto = $fu->isValidFile($photoExtension);
-            // $isValidSignature = $fu->isValidFile($signatureExtension);
-
-            // if($isValidPhoto == 1 && $isValidSignature == 1){
-                // $fu->isValidFolder($targetDir);
                 $targetPhoto = $targetDir.$userId.'-'.'photo';
                 $targetSignature = $targetDir.$userId.'-'.'signature';
+                $targetAddressProof = $targetDir.$userId.'-'.'addressProof';
 
-                if($_FILES['photo']['size'] >= $maxsize || $_FILES['signature']['size'] >= $maxsize){
+                $error = array();
+                if($_FILES['photo']['size'] >= $maxsize){
                     $error['errorCode'] = 'MAX_SIZE_EXCEEDED';
-                    $error['errorMessage'] = 'Size of each photo must not exceed 2 MB.';
+                    $error['errorMessage'] = 'Your Photo Size should not exceed 2 MB';
+                }
+                if($_FILES['signature']['size'] >= $maxsize){
+                    $error['errorCode'] = 'MAX_SIZE_EXCEEDED';
+                    $error['errorMessage'] = 'Your Signature Size should not exceed 2 MB';
+                }
+                if($_FILES['addressProof']['size'] >= $maxsize){
+                    $error['errorCode'] = 'MAX_SIZE_EXCEEDED';
+                    $error['errorMessage'] = 'Your Address Proof Size should not exceed 2 MB';
+                }
+
+                if($error != null){
+                    $response['error'] = $error;
                 }else{
                     if(move_uploaded_file($_FILES['photo']['tmp_name'], $targetPhoto)){
                         $response['isPhoto'] = '1';
@@ -48,6 +59,18 @@
                         $user->updateVolunteerStatus($userId, 'Y');
                     }else{
                         $error['errorCode'] = 'SIGNATURE_ERROR';
+                    }
+                    if(move_uploaded_file($_FILES['addressProof']['tmp_name'], $targetAddressProof)){
+                        $response['isAddressProof'] = '1';
+                    }else{
+                        $error['errorCode'] = 'PHOTO_ERROR';
+                    }
+
+                    if($error == null) {
+                        $user = new User($db);
+                        $user->updateVolunteerStatus($userId, 'Y');
+                    }else{
+                        $response['error'] = $error;
                     }
                 }
         }catch(Exception $e){

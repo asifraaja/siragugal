@@ -559,7 +559,7 @@
          * Returns (userId, userEmail, phoneNumber)
          */
         public function getAllUsers(){
-            $query = "SELECT ud.usr_id AS usr_id, ph_no, mail_id FROM user_details ud, login_details ld WHERE ud.usr_id=ld.usr_id";
+            $query = "SELECT ud.usr_id AS usr_id, ph_no, mail_id FROM user_details ud, login_details ld WHERE ud.usr_id=ld.usr_id and ld.vol_fl='Y'";
             $stmt = $this->conn->prepare($query);
             $stmt->execute();
             $result = $stmt->get_result();
