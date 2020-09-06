@@ -12,10 +12,10 @@
             "PASSWORDCOST" => 11,
             "OTPMINIMUM" => 100000,
             "OTPMAXIMUM" => 999999,
-            "LOCAL_USERNAME" => "dsal",
+            "LOCAL_USERNAME" => "fdsa",
             "LOCAL_PASSWORD" => "DSFA",
-            "PROD_USERNAME" => "DFJSALK",
-            "PROD_PASSWORD" => "DSJALK"
+            "PROD_USERNAME" => "siragugal",
+            "PROD_PASSWORD" => "HbU1whFuM@6l"
         ); 
 
         public function getProps(){

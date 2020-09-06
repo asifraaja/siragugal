@@ -3,8 +3,8 @@
         protected static $_instance = null;
         protected $conn = null;
         protected $config = array(
-            'username' => 'root',
-            'password' => '',
+            'username' => 'siragugal',
+            'password' => 'HbU1whFuM@6l',
             'hostname' => 'localhost',
             'database' => 'siragugal'
         );
