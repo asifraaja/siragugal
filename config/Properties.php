@@ -15,7 +15,8 @@
             "LOCAL_USERNAME" => "fdsa",
             "LOCAL_PASSWORD" => "DSFA",
             "PROD_USERNAME" => "siragugal",
-            "PROD_PASSWORD" => "HbU1whFuM@6l"
+            "PROD_PASSWORD" => "HbU1whFuM@6l",
+            "IS_TEST_OTP" => "1"
         ); 
 
         public function getProps(){

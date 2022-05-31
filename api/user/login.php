@@ -6,8 +6,10 @@
     header('Accept: application/json');
 
     include_once '../../config/Database.php';
+    include_once '../../config/SingletonDB.php';
     include_once '../../models/User.php';
     include_once '../../config/Validator.php';
+    include '../../dto/request/LoginRequest.php';
 
     error_reporting(E_ALL); 
     ini_set("display_errors", 1); 
@@ -19,57 +21,48 @@
      * 4. If one of them fails then -> error is thrown
      */
     if($_SERVER['REQUEST_METHOD'] == 'POST'){
-    $database = new Database();
-    $db = $database->connect();
+        $database = SingletonDB::getInstance();
+        $db = $database->connect();
+        $user = new User($db);
+        $validator = new Validator();
+        $response = array();
+        $error = array();
 
-    $user = new User($db);
+        try{
+            $JSON = file_get_contents("php://input"); 
+            $request = new LoginRequest($JSON);
+            $error = $validator->isValidLoginRequest($request);
 
-    $validator = new Validator();
-
-    $response = array();
-
-    $error = "";
-    try{
-        /** Getting the json body from the request */
-        $DATA = file_get_contents("php://input");
-        $data = json_decode($DATA);
-        if(isset($data->username) && $validator->isValidNumber($data->username))
-            $username = $data->username;
-        else
-            $error = $error . "Username cannot be empty or alphabetical";
-        if(isset($data->password) && !empty($data->password))
-            $password = $data->password;
-        else
-            $error = $error . "Password cannot be empty";
-        
-        if(!empty($error)){
-            $response['statusCode'] = "-1";
-            $response['statusMessage'] = "The Login API did not execute successfully";
-            $response['errorCode'] = "PARAM_MISSING";
-            $response['errorMessage'] = $error;
-        }else{
-            $response = $user->loginUser($username, $password);     // login for a user
-            if($response['errorCode'] == "0"){
-                // login successfull
-                $response['statusCode'] = "0";
-                $response['statusMessage'] = "The Login API is executed successfully";
-            }else if($response['errorCode'] == "OTP_NEEDED"){
-                // if the verification OTP was not entered
-                $maskedContact = $user->maskContact($response['user']['phoneNumber']);
-                $response['statusCode'] = "-1";
-                $response['statusMessage'] = "OTP has been sent to your registered PhoneNumber: ".$maskedContact;
-            }else{
-                // login failed
-                $response['statusCode'] = "-1";
-                $response['statusMessage'] = "The Login API is not executed successfully";
+            if(empty($error)){
+                $response = $user->loginUser($request->username, $request->password);
+                
+                if(isset($response['error']) && !empty($response['error'])){
+                    $err = $response['error'];
+                    if($err['errorCode'] == 'OTP_NEEDED'){
+                        $maskedContact = $user->maskContact($response['user']['phoneNumber']);
+                        $error['errorMessage'] = "OTP has been sent to your registered PhoneNumber: ".$maskedContact;
+                    }else{
+                        $error = $err;
+                    }
+                }
             }
-        }
-    }catch(Exception $e){
-        echo "Exception occured <br>" .$e;
-    }finally{
-        $db->close();
-    }
 
-    echo json_encode($response);
+        }catch(Exception $e){
+            echo "Exception during login: \n".$e; 
+        }finally{
+            $db->close();
+        }
+
+        if(!empty($error)){
+            $response['error'] = $error;
+            $response['statusCode'] = "-1";
+            $response['statusMessage'] = "The Login API Failed.";
+        }else{
+            $response['statusCode'] = "1";
+            $response['statusMessage'] = "The Login API is succesfull.";
+        }
+
+        echo json_encode($response);
+
     }
 ?>
