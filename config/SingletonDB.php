@@ -2,8 +2,11 @@
     class SingletonDB{
         private $host = "localhost";
         private $db_name = "siragugal";
-        private $username = "siragugal";
-        private $password = "HbU1whFuM@6l";
+        private $username = "root";
+        private $password = "";
+
+        // private $username = "siragugal";
+        // private $password = "HbU1whFuM@6l";
         private $conn;
         private static $instance = null;
 
@@ -21,7 +24,7 @@
             return self::$instance;
         }
 
-        public function getConnection(){
+        public function connect(){
             return $this->conn;
         }
 

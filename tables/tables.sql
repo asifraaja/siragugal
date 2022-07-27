@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS user_details (
 
 ----------------- LOGIN_DETAILS TABLE------------------
 CREATE TABLE IF NOT EXISTS login_details (
-  login_id INT(10) NOT NULL AUTO_INCREMENT,
   usr_id  INT(10) NOT NULL,
   username VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
@@ -24,7 +23,7 @@ CREATE TABLE IF NOT EXISTS login_details (
   otp_fl char(1) DEFAULT 'N',
   num_of_tries INT(1) DEFAULT 0,
   is_locked char(1) DEFAULT 'N',
-  PRIMARY KEY (login_id),
+  PRIMARY KEY (usr_id),
   FOREIGN KEY (usr_id) REFERENCES user_details(usr_id)
 ) ENGINE=InnoDB
 

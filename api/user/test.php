@@ -5,11 +5,8 @@
     header('Content-Type: application/json');
     header('Accept: application/json');
 
-    include_once '../../config/Database.php';
     include_once '../../config/SingletonDB.php';
     include_once '../../models/User.php';
-    include_once '../../config/Validator.php';
-    include '../../dto/request/LoginRequest.php';
 
     error_reporting(E_ALL); 
     ini_set("display_errors", 1); 
@@ -20,33 +17,17 @@
      * 3. If both are valid but user is not verified then -> verification OTP is sent to the user.
      * 4. If one of them fails then -> error is thrown
      */
-    if($_SERVER['REQUEST_METHOD'] == 'POST'){
+    if($_SERVER['REQUEST_METHOD'] == 'GET'){
         $database = SingletonDB::getInstance();
         $db = $database->connect();
         $user = new User($db);
-        $validator = new Validator();
         $response = array();
         $error = array();
 
         try{
-            $JSON = file_get_contents("php://input"); 
-            $request = new LoginRequest($JSON);
-            $error = $validator->isValidLoginRequest($request);
-
-            if(empty($error)){
-                $response = $user->loginUser($request->username, $request->password);
-                
-                if(isset($response['error']) && !empty($response['error'])){
-                    $err = $response['error'];
-                    if($err['errorCode'] == 'OTP_NEEDED'){
-                        $maskedContact = $user->maskContact($response['user']['phoneNumber']);
-                        $error['errorMessage'] = "OTP has been sent to your registered PhoneNumber: ".$maskedContact;
-                    }else{
-                        $error = $err;
-                    }
-                }
-            }
-
+        
+            $response = $user->testDatabases();
+            
         }catch(Exception $e){
             echo "Exception during login: \n".$e; 
         }finally{

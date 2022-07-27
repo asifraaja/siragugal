@@ -65,6 +65,7 @@
             $stmt->bind_param('d', $phoneNumber);
             $stmt->execute();
             $result = $stmt->get_result();
+            echo 'result '.$result->num_rows;
             if($result->num_rows == 0){
                 return 0;
             } else{
@@ -150,7 +151,7 @@
          * @param dob - date of birth 
          * @param password - password the user wants to set
          */
-        public function createUser($firstname, $lastname, $mail_id, $phoneNumber, $dob, $password){
+        private function createUser($firstname, $lastname, $mail_id, $phoneNumber, $dob, $password){
             $res = array();
 
             // Insert the user details into the database
@@ -165,9 +166,10 @@
             $stmt->bind_param('d', $phoneNumber);
             $result = $stmt->execute();
             $result = $stmt->get_result();
+            $error = array();
             if($result->num_rows == 0){
-                $res['errorCode'] = '1';
-                $res['errorMessage'] = "Error while creating user.";
+                $error['errorCode'] = '-1';
+                $error['errorMessage'] = "Error while creating user.";
             }else{
                 $row = $result->fetch_assoc();
                 $userId = $row['usr_id'];
@@ -179,8 +181,6 @@
                 $stmt->bind_param('ddss', $userId, $phoneNumber, $encrypted_password, $timestamp);
                 $result = $stmt->execute();
 
-                $res['errorCode'] = '0';
-                $res['errorMessage'] = "User created successfully";
                 $user = array();
                 $user['userId'] = $userId;
                 $user['firstname'] = $firstname;
@@ -193,6 +193,7 @@
                 $user['isVolunteer'] = 'N';
                 $res['user'] = $user;
             }
+            $res['error'] = $error;
             return $res;
         }
 
@@ -231,24 +232,26 @@
                     else $status = "PASSWORD_FAILED";
                 }
             }
+            $error = array();
 
             // Respond based on the status
             switch($status){
                 case "NO_USER":
-                    $res = self::lockUser($username);     // Check if we can lock the user
+                    $error['errorCode'] = 'NO_SUCH_USER';
+                    $error['errorMessage'] = "No such user exists. Please register.";
                 break;
 
                 case "LOCKED":
-                    $res = self::lockUser($username);     // Check if we can lock the user
+                    $error = self::lockUser($username);     // Check if we can lock the user
                 break;
 
                 case "PASSWORD_FAILED":
-                    $res = self::lockUser($username);     // Check if we can lock the user
+                    $error = self::lockUser($username);     // Check if we can lock the user
                 break;
 
                 case "OTP_NEEDED":
                     // send an OTP to the phoneNumber
-                    $res['errorCode'] = "OTP_NEEDED";
+                    $error['errorCode'] = "OTP_NEEDED";
                     $otp_sent = self::sendOTP($username);
                     
                     if($otp_sent != null){
@@ -258,10 +261,8 @@
                         $res['user']['otpIs'] = $otp_sent;
                         $res['user']['phoneNumber'] = $username;
                     }else{
-                        $res['statusCode'] = "-1";
-                        $res['statusMessage'] = "The Registration API did not successfully";
-                        $res['errorCode'] = "OTP_ERROR";
-                        $res['errorMessage'] = "Error while sending OTP";
+                        $error['errorCode'] = "OTP_ERROR";
+                        $error['errorMessage'] = "Error while sending OTP";
                     }
                 break;
 
@@ -274,6 +275,7 @@
                     $isAdmin = $row['admin_fl'];
                     $isVolunteer = $row['vol_fl'];
                     $phoneNumber = $row['username'];
+
                     // Getting user details
                     $user_details_query = "SELECT * FROM user_details WHERE usr_id = ?";
                     $stmt = $this->conn->prepare($user_details_query);
@@ -282,8 +284,6 @@
                     $user_details_result = $stmt->get_result();
                     $user_details_row = $user_details_result->fetch_assoc();
 
-                    $res['errorCode'] = "0";
-                    $res['errorMessage'] = null;
                     $user = array();
                     $user['userId'] = $userId;
                     $user['firstname'] = $user_details_row['firstname'];
@@ -298,31 +298,11 @@
                     $res['user'] = $user;
                 break;
             }
+
+            $res['error'] = $error;
             return $res;
         }
 
-        /**
-         * send an otp to the phonenumber
-         * @param phoneNumber
-         */
-        public function sendOTP2($phoneNumber){
-            // $textlocal = new Textlocal($this->props['TEXTLOCALEMAIL'], $this->props['TEXTLOCALHASH']);
-            $textlocal = new Textlocal(false, false, $this->props['TEXTLOCALAPIKEY']);
-            $phoneNumber = '91'.$phoneNumber;
-            $numbers = array($phoneNumber);
-            $sender = $this->props['TEXTLOCALSENDER'];
-            $otp_number = mt_rand($this->props['OTPMINIMUM'], $this->props['OTPMAXIMUM']); 
-            $message = "The OTP for Siragugal trust is ".$otp_number;
-            // echo $message;
-            try{
-                $result = $textlocal->sendSms($numbers, $message, $sender);
-                // echo "Result is : ".$result;
-                return $otp_number;
-            }catch(Exception $e){
-                // echo "Exception :".$e;
-                return null;
-            }
-        }
 
         /**
          * sends an OTP to the phoneNumber
@@ -332,7 +312,7 @@
             // setting the details from TEXTLOCAL
             $username = "reebas7@gmail.com";    // TEXTLCL account
             $hash = "2a21f3d9da52f0b467276793f3d949e024118339d77f700fbc58f94ed641d798";         // hashkey from TEXTLOCAL
-            $test = "0";    // sends the message. 1->doesn't sends. 0->sends to Phone.
+            $test = $this->props['IS_TEST_OTP'];    // sends the message. 1->doesn't sends. 0->sends to Phone.
             $sender = "SIRAGU";     //$this->props['TEXTLOCALSENDER'];      // This is who the message appears to be from.
             
             $numbers = "91".$phoneNumber;       // A single number or a comma-seperated list of numbers
@@ -357,7 +337,7 @@
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $result = curl_exec($ch); // This is the result from the API
             $output = json_decode($result);
-            // echo $result;
+            echo $result;
             $status = $output->status;
             if($status == "success"){
 
@@ -365,6 +345,7 @@
                 $otp_number = null;
             }
             curl_close($ch);
+            echo "otp num ".$otp_number;
             return $otp_number;
         }
 
@@ -464,7 +445,7 @@
             $username = "reebas7@gmail.com";
             $hash = "2a21f3d9da52f0b467276793f3d949e024118339d77f700fbc58f94ed641d798";
 
-            $test = "0";
+            $test = "1";
             $sender = "SIRAGU";//$this->props['TEXTLOCALSENDER']; // This is who the message appears to be from.
             $numbers = "91".$phoneNumber; // A single number or a comma-seperated list of numbers
             $message = $this->props['TEXTLOCALTEMPLATE'];
@@ -595,6 +576,35 @@
             return $users;
         }
 
+        /**
+         * register a user
+         */
+        public function registerNewUser($request)
+        {
+            $response = array();
+            $error = array();
+            $userFound = self::findOneUser($request->phoneNumber);
+            if($userFound != 0){
+                $error['errorCode'] = 'USER_ALREADY_EXISTS';
+                $error['errorMessage'] = 'PhoneNumber'.$request->phoneNumber.'is already registered with us. Please login or try another phoneNumber';
+                $response['error'] = $error;
+            }else{
+                $response = self::createNewUser($request);
+            }
+            return $response;
+        }
+
+        private function createNewUser($request)
+        {
+            return self::createUser($request->firstname, 
+                $request->lastname, 
+                $request->mailId, 
+                $request->phoneNumber, 
+                $request->dob, 
+                $request->password);
+
+        }
+
         public function updateOTPStatusAndGetUserDetails($phoneNumber){
             self::updateOTPStatus($phoneNumber);
             return self::getUserDetails($phoneNumber);
@@ -606,6 +616,24 @@
             $stmt->bind_param('sd', $volunteerStatus, $userId);
             $result = $stmt->execute();
             return $result;
+        }
+
+        public function testDatabases(){
+            $response = array();
+            $query = "SELECT COUNT(usr_id) as c FROM user_details";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if($result->num_rows == 0){
+                $response['count']= 'failed';
+            }else{
+                $row = $result->fetch_assoc();
+                $countOfRows = $row['c'];
+                $response['count'] = $countOfRows;
+            }
+            return $response;
         }
     }
 ?>

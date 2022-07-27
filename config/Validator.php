@@ -1,5 +1,13 @@
 <?php
     class Validator{
+        public function isValidUsername($string){
+            return isset($string) && !empty($string) && self::isValidPhoneNumber($string);
+        }
+
+        public function isPasswordSet($string){
+            return isset($string) && !empty($string);
+        }
+
         public function isValidText($string){
             if(ctype_alpha($string))
                 return true;
@@ -23,7 +31,7 @@
         }
 
         public function isValidPhoneNumber($phoneNumber){
-            if(strlen($phoneNumber) == 10 && $phoneNumber[0] != '0')
+            if(strlen($phoneNumber) == 10)
                 return self::isValidNumber($phoneNumber);
             else
                 return false;
@@ -68,6 +76,40 @@
                 $isValidYear =  true;
             else $isValidYear =  false;
             return $isValidYear;
+        }
+
+        public function isValidLoginRequest($request){
+            $error = array();
+            if(!self::isValidUsername($request->username)){
+                $error['errorCode'] = 'INVALID_PARAM';
+                $error['errorMessage'] = 'Username must be phoneNumber.';
+            }else if(!self::isPasswordSet($request->password)){
+                $error['errorCode'] = 'INVALID_PARAM';
+                $error['errorMessage'] = 'Password must not be empty.';
+            }
+            return $error;
+        }
+
+        public function isValidRegisterRequest($request){
+            $error = array();
+            if(!isset($request->firstname) || !self::isValidText($request->firstname)){
+                $error['errorCode'] = 'INVALID_PARAM';
+                $error['errorMessage'] = 'FistName should not be empty.';  
+            }else if(!isset($request->lastname) || !self::isValidText($request->lastname)){
+                $error['errorCode'] = 'INVALID_PARAM';
+                $error['errorMessage'] = 'LastName should not be empty'; 
+            }else if(!isset($request->mailId) || !self::isValidEmail($request->mailId)){
+                $error['errorCode'] = 'INVALID_PARAM';
+                $error['errorMessage'] = 'Invalid email id.'; 
+            }else if(!isset($request->phoneNumber) || !self::isValidPhoneNumber($request->phoneNumber)){
+                $error['errorCode'] = 'INVALID_PARAM';
+                $error['errorMessage'] = 'Invalid phoneNumber. phoneNumber should be 10 digits. No need for 0 or +91'; 
+            }else if(!isset($request->password) || !self::isPassword($request->password)){
+                $error['errorCode'] = 'INVALID_PARAM';
+                $error['errorMessage'] = 'Password must be atleast 8 chars.\n Password must have atleast 1 digit.'; 
+            }
+            return $error;
+
         }
     }
 ?>

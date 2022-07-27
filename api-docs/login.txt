@@ -1,0 +1,104 @@
+Login Request:-
+endpoint : /siragugal/api/user/login.php
+
+Sample Request Payload:
+{
+	"username":1234567890,
+	"password":"Test@123"
+}
+
+Request Variables:-
+username - contains the 10 digit phoneNumber of user - Mandatory to send - long
+password - contains the password to login - Mandatory to send - String
+
+Successful Sample Response:-
+{
+    "user": {
+        "userId": 4,
+        "firstname": "A",
+        "lastname": "B",
+        "mail_id": "a@b.c",
+        "dob": "2022-02-12",
+        "phoneNumber": "1234567890",
+        "lastLoggedInTime": "2022-05-31 13:18:50",
+        "isAdmin": "N",
+        "isVolunteer": "N",
+        "maskedContact": "12*****890"
+    },
+    "error": [],
+    "statusCode": "1",
+    "statusMessage": "The Login API is succesfull."
+}
+
+Response Variables:-
+statusCode - 1 = success, -1 = failed - String
+statusMessage - String of message
+error - Array of Json Object
+user - Json Object
+user.userId - userId - integer
+user.firstname - name - string
+user.lastname - name - string
+user.dob - dateOfBirth - string (yyyy-MM-dd)
+phoneNumber - 10 digit phone - string
+lastLoggedInTime - string
+isAdmin - 1 letter string - (Y/N)
+isVolunteer - 1 letter string - (Y/N)
+maskedContact - phoneNumber but few characters are masked - string
+
+
+Login Failed Responses:-
+1. No Such User Exists:-
+{
+    "error": {
+        "errorCode": "NO_SUCH_USER",
+        "errorMessage": "No such user exists. Please register."
+    },
+    "statusCode": "-1",
+    "statusMessage": "The Login API Failed."
+}
+
+2. Parameter Missing:-
+{
+    "error": {
+        "errorCode": "INVALID_PARAM",
+        "errorMessage": "Username must be phoneNumber."
+    },
+    "statusCode": "-1",
+    "statusMessage": "The Login API Failed."
+}
+
+3. Invalid Password:-
+{
+    "error": {
+        "errorCode": "WARN_USER",
+        "errorMessage": "Wrong Credentials. Repeat it 4 . Your Account will get locked."
+    },
+    "statusCode": "-1",
+    "statusMessage": "The Login API Failed."
+}
+
+4. If OTP sending is failed:-
+{
+    "error": {
+        "errorCode": "OTP_ERROR",
+        "errorMessage": "Error while sending OTP"
+    },
+    "statusCode": "-1",
+    "statusMessage": "The Login API Failed."
+}
+
+5. If OTP is not validated:-
+{
+    "error": {
+        "errorCode": "OTP_NEEDED",
+        "errorMessage": "Need OTP to login"
+    },
+    "user":{
+    	"otp": "---encrypted------otp######",
+    	"otp_sent_time": "2022-05-31 13:18:50",
+    	"otpIs": "123456",
+    	"phoneNumber": "9907168795"
+    }
+    "statusCode": "-1",
+    "statusMessage": "The Login API Failed."
+}
